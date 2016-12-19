@@ -1,6 +1,7 @@
 add_library(OHPass MODULE
     # List your source files here.
-    OH.cpp
+    CVPass.cpp
+    #OH.cpp
 )
 
 # Use C++11 to compile our pass (i.e., supply -std=c++11).

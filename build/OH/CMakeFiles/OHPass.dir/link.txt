@@ -1,1 +1,0 @@
-/usr/bin/c++  -fPIC   -shared  -o libOHPass.so CMakeFiles/OHPass.dir/CVPass.cpp.o  -L/usr/local/lib 
