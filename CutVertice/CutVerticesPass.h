@@ -32,12 +32,8 @@ namespace {
             return false;
 		}
 
-		std::vector<const char*> getArray(){
-			std::vector<const char*> v;
-			for(int i:ids){
-				v.push_back(std::to_string(i).c_str());
-			}
-			return v;
+		std::vector<int> getArray(){
+			return ids;
 		}
 
 		std::vector<int> ids={};

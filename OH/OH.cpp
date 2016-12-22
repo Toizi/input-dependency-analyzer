@@ -10,20 +10,36 @@
 #include "llvm/IR/Module.h"
 #include "llvm/Support/Debug.h" 
 #include "../CutVertice/CutVerticesPass.h"
+#include <math.h>
 
 using namespace llvm;
 namespace {
 	struct OHPass : public FunctionPass {
 		static char ID;
 		OHPass() : FunctionPass(ID) {}
+
+		int wholelines=0;
+		int cutlines=0;
+
 		virtual bool runOnFunction(Function &F){
 			bool didModify = false;
+			std::vector<int> CutVertices=getAnalysis<CutVerticesPass>().getArray();
 			for (auto& B : F) {
-				std::vector<const char*> CutVertices=getAnalysis<CutVerticesPass>().getArray();
-				if(!CutVertices.empty()&& std::find(CutVertices.begin(),CutVertices.end(),
+				for(auto i:CutVertices){
+					if(B.getName()==std::to_string(i).c_str()){
+						for(auto& I : B){
+							cutlines++;
+						}
+						errs() << "Cut Vertices: " << B.getName() << "\n";
+					}
+				}
+				for(auto& I : B){
+					wholelines++;
+				}
+				/*if(!CutVertices.empty()&& std::find(CutVertices.begin(),CutVertices.end(),
 					B.getName())!=CutVertices.end()){
 					errs() << "Cut Vertices: " << B.getName() << "\n";
-				}
+				}*/
                 continue;
 				for (auto& I : B) {
 					//dbgs() << I << I.getOpcodeName() << "\n";
@@ -45,6 +61,8 @@ namespace {
 					}
 				}
 			}
+			errs() << "Lines we cut: " << cutlines << " - All lines: " << wholelines << "\n";
+			errs() << "Percentage we cut: " << (int)std::trunc(100.0*(double)cutlines/(double)wholelines)<< "\n";
 			return didModify;
 		}
 

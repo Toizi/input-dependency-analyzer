@@ -66,7 +66,7 @@ namespace {
             for (int i = 0; i < V; i++){
                 if (ap[i] == true){
                     ids.push_back(i);
-                    errs() << i << "\n";
+                    //errs() << i << "\n";
                 }
             }
             return ids;
