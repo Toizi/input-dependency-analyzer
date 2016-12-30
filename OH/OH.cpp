@@ -18,10 +18,12 @@ namespace {
 		static char ID;
 		OHPass() : FunctionPass(ID) {}
 
-		int wholelines=0;
+		int linesOfCode=0;
 		int cutlines=0;
 
 		virtual bool runOnFunction(Function &F){
+			linesOfCode=0;
+			cutlines=0;
 			bool didModify = false;
 			std::vector<int> CutVertices=getAnalysis<CutVerticesPass>().getArray();
 			for (auto& B : F) {
@@ -29,40 +31,40 @@ namespace {
 					if(B.getName()==std::to_string(i).c_str()){
 						for(auto& I : B){
 							cutlines++;
+								if (auto* op = dyn_cast<BinaryOperator>(&I)) {
+									// Insert *after* `op`.
+									updateHash(&B, &I, op, false);
+									didModify =true;
+								} else if (CmpInst* cmpInst = dyn_cast<CmpInst>(&I)){
+									didModify = handleCmp(cmpInst,&B);
+								} else if (StoreInst* storeInst = dyn_cast<StoreInst>(&I)){
+									didModify = handleStore(storeInst, &B);
+								} //TODO: else if (handle switch case and other conditions)
+								//terminator indicates the last block
+								else if(ReturnInst *RI = dyn_cast<ReturnInst>(&I)){
+									// Insert *before* ret
+									dbgs() << "**returnInst**\n";
+									printHash(&B, RI, true);	
+									didModify = true;
+								}
 						}
 						errs() << "Cut Vertices: " << B.getName() << "\n";
 					}
 				}
-				for(auto& I : B){
-					wholelines++;
-				}
-				/*if(!CutVertices.empty()&& std::find(CutVertices.begin(),CutVertices.end(),
-					B.getName())!=CutVertices.end()){
-					errs() << "Cut Vertices: " << B.getName() << "\n";
-				}*/
-                continue;
 				for (auto& I : B) {
+					linesOfCode++;
 					//dbgs() << I << I.getOpcodeName() << "\n";
-					if (auto* op = dyn_cast<BinaryOperator>(&I)) {
-						// Insert *after* `op`.
-						updateHash(&B, &I, op, false);
-						didModify =true;
-					} else if (CmpInst* cmpInst = dyn_cast<CmpInst>(&I)){
-						didModify = handleCmp(cmpInst,&B);
-					} else if (StoreInst* storeInst = dyn_cast<StoreInst>(&I)){
-						didModify = handleStore(storeInst, &B);
-					} //TODO: else if (handle switch case and other conditions)
-					//terminator indicates the last block
-					else if(ReturnInst *RI = dyn_cast<ReturnInst>(&I)){
+					/*if(ReturnInst *RI = dyn_cast<ReturnInst>(&I)){
 						// Insert *before* ret
 						dbgs() << "**returnInst**\n";
 						printHash(&B, RI, true);	
 						didModify = true;
-					}
+					}*/
 				}
 			}
-			errs() << "Lines we cut: " << cutlines << " - All lines: " << wholelines << "\n";
-			errs() << "Percentage we cut: " << (int)std::trunc(100.0*(double)cutlines/(double)wholelines)<< "\n";
+			errs() << "Function: " << F.getName() << "\n";
+			errs() << "\t" << "Lines we cut: " << cutlines << " - All lines: " << linesOfCode << "\n";
+			errs() << "\t" << "Percentage we cut: " << (int)std::trunc(100.0*(double)cutlines/(double)linesOfCode)<< "\n";
 			return didModify;
 		}
 

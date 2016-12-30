@@ -18,8 +18,9 @@ int main(){
 		//a++;
 	}
 	//a=10;
-	while(a>=10){
+	while(0){
 		a++;
+		return 0;
 	}
 	return 0;
 }
