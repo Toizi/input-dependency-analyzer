@@ -550,7 +550,10 @@ public:
             std::string str;
             llvm::raw_string_ostream rso(str);
             Inst->print(rso);
-            
+            for (auto& Arg : Inst->getFunction()->getArgumentList()){
+                errs() << Arg << "\n";
+            }
+
             if(str==s){
                 return I->second;
             }

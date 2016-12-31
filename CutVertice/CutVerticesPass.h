@@ -32,12 +32,16 @@ namespace {
 			//Push back entryBB
 			ids.push_back(std::stoi(F.getEntryBlock().getName()));
 			//Push back returnBBs
+			std::vector<int> returnNodes;
 			for(auto& B : F){
 				for (auto& I : B) {
 					if (ReturnInst *RI = dyn_cast<ReturnInst>(&I)){
-						ids.push_back(std::stoi(B.getName()));
-					}		
+						returnNodes.push_back(std::stoi(B.getName()));
+					}
 				}
+			}
+			if(returnNodes.size()==1){
+				ids.push_back(returnNodes[0]);
 			}
             return false;
 		}
