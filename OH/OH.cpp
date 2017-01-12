@@ -19,12 +19,6 @@ namespace {
 		virtual bool runOnFunction(Function &F){
 			bool didModify = false;
 			for (auto& B : F) {
-				std::vector<const char*> CutVertices=getAnalysis<CutVerticesPass>().getArray();
-				if(!CutVertices.empty()&& std::find(CutVertices.begin(),CutVertices.end(),
-					B.getName())!=CutVertices.end()){
-					errs() << "Cut Vertices: " << B.getName() << "\n";
-				}
-                continue;
 				for (auto& I : B) {
 					//dbgs() << I << I.getOpcodeName() << "\n";
 					if (auto* op = dyn_cast<BinaryOperator>(&I)) {
@@ -48,10 +42,10 @@ namespace {
 			return didModify;
 		}
 
-		virtual void getAnalysisUsage(AnalysisUsage &AU) const {
+		/*virtual void getAnalysisUsage(AnalysisUsage &AU) const {
 			AU.addRequired<CutVerticesPass>();
 			AU.setPreservesAll();
-		}
+		}*/
 
 		bool handleStore(StoreInst *storeInst, BasicBlock *BB){
 			dbgs() << "**HandleStore**\n";
@@ -144,8 +138,8 @@ char OHPass::ID = 0;
 // http://adriansampson.net/blog/clangpass.html
 static void registerOHPass(const PassManagerBuilder &,
 		legacy::PassManagerBase &PM) {
-	PM.add(new CutVerticesPass());
-    PM.add(new OHPass());
+	//PM.add(new CutVerticesPass());
+	PM.add(new OHPass());
 }
 static RegisterStandardPasses
 RegisterMyPass(PassManagerBuilder::EP_EarlyAsPossible,

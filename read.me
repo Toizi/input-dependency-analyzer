@@ -6,10 +6,13 @@ cmake ..
 make
 
 Run:
-cd build
-clang -Xclang -load -Xclang OH/libOHPass.so ../example.c
+[cc -c rtlib.c]  **if any runtime library** 
+clang -Xclang -load -Xclang build/OH/libOHPass.so -c example.c [-emit-llvm]
+cc example.o rtlib.o *if wanna run*
 
 
 Print dot files:
-to be added!
+opt --dot-cfg file.s
+dot -Tpng cfg.file.dot>output.png
+xdg-open cfg.file.dot
 
