@@ -1,5 +1,7 @@
 #echo $1 $2 $3 $4
-#./transform-slice-transfrom.sh $1
+#Usage Progam[without .c  extention] Function1 Function2 Function3 
+#CFG of specified Functions will be displayed as png on screen
+./transform-slice-transfrom.sh $1
 opt --dot-cfg $1.oh -o $1.oh.cfg
 dot -Tpng cfg.main.dot>$1.oh.main.png
 if [-z "$2"]
