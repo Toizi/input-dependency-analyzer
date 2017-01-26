@@ -45,8 +45,8 @@ namespace {
 						// Insert *before* ret
 						if (F.getName().equals("main")){ 
 							dbgs() << "**returnInst**\n";
-							printHash(&B, RI, true);	
-							didModify = true;
+							//printHash(&B, RI, true);	
+							//didModify = true;
 						}
 					}
 				}

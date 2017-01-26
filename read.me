@@ -5,10 +5,18 @@ cd build
 cmake ..
 make
 
-Run:
+Run pass:
 [cc -c rtlib.c]  **if any runtime library** 
 clang -Xclang -load -Xclang build/OH/libOHPass.so -c example.c [-emit-llvm]
+opt -load build/OH/libOHPass.so file.bc -oh -o output.bc
+
+Link:
+llvm-link file1.bc file2.bc -o file3.bc
+
+
 cc example.o rtlib.o *if wanna run*
+
+
 
 
 Print dot files:
