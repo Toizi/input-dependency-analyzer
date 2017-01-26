@@ -1,3 +1,4 @@
+#include "rtlib.c"
 int inc(int a){
 	return a++;
 }
@@ -5,6 +6,6 @@ int inc(int a){
 int main(){
 	int a = 5;
 	a = inc(a);
-	//dcs(hash);
+	logHash(hash);
 	return 0;
 }

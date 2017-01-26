@@ -1,10 +1,11 @@
 #include <stdio.h>
+#include "rtlib.h"
 /*void logop(int i) {
 	printf("computed: %i\n", i);
 }*/
-long hash =0;
+//long hash =0;
 void hashMe(int i) {
-	printf("adding hash %i\n", i);
+	//printf("adding hash %i\n", i);
 	hash +=i;
 }
 //a dummy callsite to compensate the reference to slicing call-site (see my issue openned at dg repository on Github)
@@ -15,7 +16,7 @@ void hashMe(int i) {
 //	printf("adding hash %s %i\n",valueName, i);
 //        hash +=i;
 //} 
-void logHash(long hash) {
+void logHash(int hash) {
 	//dcs(hash);
-	printf("final hash: %ld\n", hash);
+	printf("final hash: %d\n", hash);
 }
