@@ -18,11 +18,20 @@ namespace {
 		OHPass() : FunctionPass(ID) {}
 		virtual bool runOnFunction(Function &F){
 			bool didModify = false;
+			bool hasChallenge = false;
 			dbgs()<<"In function:" << F.getName()<<"\n";
 			//TODO: make sure hashMe and logHash are not shipped with the binary
 			if (F.getName().equals("hashMe")||F.getName().equals("logHash")) return false;
 			for (auto &B : F) {
-				for (auto &I : B) {			
+				for (auto &I : B) {
+
+					//Get a challenge as input
+					if(!hasChallenge){
+						hasChallenge = true;
+						//Only add challenge to the main function, i.e. before doing anything else
+						if (!F.getName().equals("main")) continue;
+						handleInputChallenge(&B, &I, true); 
+					}			
 					//dbgs() << I << I.getOpcodeName() << "\n";
 					if (auto* op = dyn_cast<BinaryOperator>(&I)) {
 						// Insert *after* `op`.
@@ -193,6 +202,35 @@ namespace {
 			//	args->getType()->print(dbgs());
 			//}
 		}
+		bool handleInputChallenge(BasicBlock *BB, Instruction *I, bool insertBeforeInstruction){
+			dbgs() << "Handling challenge as seed";
+			LLVMContext& Ctx = BB->getParent()->getContext();
+			// get BB parent -> Function -> get parent -> Module 
+			Constant* inputChallengeFunc = BB->getParent()->getParent()->getOrInsertFunction(
+					"inputChallenge", Type::getInt32Ty(Ctx),NULL);
+			IRBuilder <> builder(I);
+			if(insertBeforeInstruction){
+				builder.SetInsertPoint(I);
+			} else {
+				builder.SetInsertPoint(I->getNextNode());
+			}
+			//Value *args = {BB->getModule()->getOrInsertGlobal("hash", Type::getInt32Ty(Ctx))};
+			//args->dump();
+
+			//args->getType()->print(dbgs())i;
+			//if(args->getType()->isIntOrIntVectorTy() && args->getType()->getIntegerBitWidth() == 32){
+			CallInst *callInst = builder.CreateCall(inputChallengeFunc);
+			callInst->dump();
+			auto hashVar = BB->getModule()->getOrInsertGlobal("hash", Type::getInt32Ty(Ctx));
+			builder.CreateStore(callInst, hashVar);
+			return true; 
+			//LoadInst *loadVal=builder.CreateLoad(hashVar);
+
+			//} else {
+			//      args->getType()->print(dbgs());
+			//}
+		}
+
 	};
 }
 
