@@ -25,27 +25,27 @@ namespace {
 				for (auto &I : B) {			
 					//dbgs() << I << I.getOpcodeName() << "\n";
 					if (auto* op = dyn_cast<BinaryOperator>(&I)) {
-					// Insert *after* `op`.
-					dbgs()<<"Binay operator\n";
-					updateHash(&B, &I, op, false);
-					didModify =true;
+						// Insert *after* `op`.
+						dbgs()<<"Binay operator\n";
+						updateHash(&B, &I, op, false);
+						didModify =true;
 					} else if (CmpInst* cmpInst = dyn_cast<CmpInst>(&I)){
 						didModify = handleCmp(cmpInst,&B);
 					} else if (StoreInst* storeInst = dyn_cast<StoreInst>(&I)){
 						didModify = handleStore(storeInst, &B);
 					} //TODO: else if (handle switch case and other conditions)
-				//terminator indicates the last block
-				else if(ReturnInst *RI = dyn_cast<ReturnInst>(&I)){
-					if (!F.getName().equals("main")) continue;
-					// Insert *before* ret
-					dbgs() << "**returnInst**\n";
-					//printHash(&B, RI, true);	
-					//didModify = true;
-					// Slicer adds multiple return instrustions to a function, thus we need to return to avoid adding multiple prints
-					return true;
-				} else if (LoadInst *loadInst = dyn_cast<LoadInst>(&I)){
-					didModify = handleLoad(loadInst,&B);
-				}
+					//terminator indicates the last block
+					else if(ReturnInst *RI = dyn_cast<ReturnInst>(&I)){
+						if (!F.getName().equals("main")) continue;
+						// Insert *before* ret
+						dbgs() << "**returnInst**\n";
+						printHash(&B, RI, true);	
+						didModify = true;
+						// Slicer adds multiple return instrustions to a function, thus we need to return to avoid adding multiple prints
+						return true;
+					} else if (LoadInst *loadInst = dyn_cast<LoadInst>(&I)){
+						didModify = handleLoad(loadInst,&B);
+					}
 				}
 			}
 			return didModify;
@@ -166,7 +166,11 @@ namespace {
 			LLVMContext& Ctx = BB->getParent()->getContext();
 			// get BB parent -> Function -> get parent -> Module 
 			Constant* logHashFunc = BB->getParent()->getParent()->getOrInsertFunction(
-					"logHash", Type::getVoidTy(Ctx),NULL);
+					//dbgs()<<"jhjh:"<<args<<"\n";
+					"logHash", Type::getVoidTy(Ctx), Type::getInt32Ty(Ctx), NULL
+					);
+			//BB->getParent()->getParent()->getOrInsertFunction(
+			//					"logHash", Type::getVoidTy(Ctx),NULL);
 			IRBuilder <> builder(I);
 			//auto insertPoint = ++builder.GetInsertPoint();
 			if(insertBeforeInstruction){
@@ -177,7 +181,17 @@ namespace {
 				//dbgs() << "FuncName: "<<BB->getParent()->getName()<<"\n";
 				builder.SetInsertPoint(I->getNextNode());
 			}
-			builder.CreateCall(logHashFunc);	
+			//Value *args = {BB->getModule()->getOrInsertGlobal("hash", Type::getInt32Ty(Ctx))};
+			//args->dump();
+
+			//args->getType()->print(dbgs())i;
+			auto hashVar = BB->getModule()->getOrInsertGlobal("hash", Type::getInt32Ty(Ctx));	
+			LoadInst *loadVal=builder.CreateLoad(hashVar);
+			//if(args->getType()->isIntOrIntVectorTy() && args->getType()->getIntegerBitWidth() == 32){
+			builder.CreateCall(logHashFunc,loadVal);	
+			//} else {
+			//	args->getType()->print(dbgs());
+			//}
 		}
 	};
 }
