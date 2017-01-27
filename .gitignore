@@ -1,0 +1,10 @@
+*.bc
+*.png
+build/*
+*.ll
+*.dot
+*.oh
+*.sliced
+*.dh
+*.cfg
+*.verifier
