@@ -2,6 +2,8 @@ add_library(OHPass MODULE
     # List your source files here.
     #CVPass.cpp
     OH.cpp
+    InputDependencyAnalysis.cpp
+    NonDeterministicBranchesAnalysis.cpp
 )
 
 # Use C++11 to compile our pass (i.e., supply -std=c++11).

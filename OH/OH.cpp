@@ -10,28 +10,46 @@
 #include "llvm/IR/Module.h"
 #include "llvm/Support/Debug.h" 
 #include "../CutVertice/CutVerticesPass.h"
+#include "NonDeterministicBranchesAnalysis.h"
+#include "InputDependencyAnalysis.h"
 
 using namespace llvm;
 namespace {
 	struct OHPass : public FunctionPass {
 		static char ID;
 		OHPass() : FunctionPass(ID) {}
+
+                void getAnalysisUsage(llvm::AnalysisUsage& AU) const
+                {
+                    AU.addRequired<input_slice::InputDependencyAnalysis>();
+                    AU.addRequired<input_slice::NonDeterministicBranchesAnalysis>();
+                    AU.setPreservesAll();
+                }
+
+
 		virtual bool runOnFunction(Function &F){
+                        const auto& nonDetBr = getAnalysis<input_slice::NonDeterministicBranchesAnalysis>();
+                        const auto& inputDepA = getAnalysis<input_slice::InputDependencyAnalysis>();
 			bool didModify = false;
-			for (auto& B : F) {
-				std::vector<const char*> CutVertices=getAnalysis<CutVerticesPass>().getArray();
-				if(!CutVertices.empty()&& std::find(CutVertices.begin(),CutVertices.end(),
-					B.getName())!=CutVertices.end()){
-					errs() << "Cut Vertices: " << B.getName() << "\n";
-				}
-                continue;
-				for (auto& I : B) {
+			dbgs()<<"In function:" << F.getName()<<"\n";
+			//TODO: make sure hashMe and logHash are not shipped with the binary
+			if (F.getName().equals("hashMe") || F.getName().equals("logHash")) {
+                            return false;
+                        }
+			for (auto &B : F) {
+                                //if (nonDetBr.isNonDeterministic(&B)) {
+                                //    continue;
+                                //}
+				for (auto &I : B) {			
 					//dbgs() << I << I.getOpcodeName() << "\n";
 					if (auto* op = dyn_cast<BinaryOperator>(&I)) {
 						// Insert *after* `op`.
 						updateHash(&B, &I, op, false);
 						didModify =true;
-					} else if (CmpInst* cmpInst = dyn_cast<CmpInst>(&I)){
+					} else if (CmpInst* cmpInst = dyn_cast<CmpInst>(&I)) {
+                                                if (inputDepA.isInputDependent(cmpInst)) {
+                                                    continue;
+                                                }
 						didModify = handleCmp(cmpInst,&B);
 					} else if (StoreInst* storeInst = dyn_cast<StoreInst>(&I)){
 						didModify = handleStore(storeInst, &B);
