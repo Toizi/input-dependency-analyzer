@@ -9,8 +9,8 @@
 #include "llvm/Transforms/Utils/BasicBlockUtils.h"
 #include "llvm/IR/Module.h"
 #include "llvm/Support/Debug.h" 
+
 #include "../CutVertice/CutVerticesPass.h"
-#include "NonDeterministicBranchesAnalysis.h"
 #include "InputDependencyAnalysis.h"
 
 using namespace llvm;
@@ -22,13 +22,11 @@ namespace {
                 void getAnalysisUsage(llvm::AnalysisUsage& AU) const
                 {
                     AU.addRequired<input_slice::InputDependencyAnalysis>();
-                    AU.addRequired<input_slice::NonDeterministicBranchesAnalysis>();
                     AU.setPreservesAll();
                 }
 
 
 		virtual bool runOnFunction(Function &F){
-                        const auto& nonDetBr = getAnalysis<input_slice::NonDeterministicBranchesAnalysis>();
                         const auto& inputDepA = getAnalysis<input_slice::InputDependencyAnalysis>();
 			bool didModify = false;
 			dbgs()<<"In function:" << F.getName()<<"\n";
@@ -41,15 +39,15 @@ namespace {
                                 //    continue;
                                 //}
 				for (auto &I : B) {			
+                                    if (inputDepA.isInputDependent(&I)) {
+                                        continue;
+                                    }
 					//dbgs() << I << I.getOpcodeName() << "\n";
 					if (auto* op = dyn_cast<BinaryOperator>(&I)) {
 						// Insert *after* `op`.
 						updateHash(&B, &I, op, false);
 						didModify =true;
 					} else if (CmpInst* cmpInst = dyn_cast<CmpInst>(&I)) {
-                                                if (inputDepA.isInputDependent(cmpInst)) {
-                                                    continue;
-                                                }
 						didModify = handleCmp(cmpInst,&B);
 					} else if (StoreInst* storeInst = dyn_cast<StoreInst>(&I)){
 						didModify = handleStore(storeInst, &B);

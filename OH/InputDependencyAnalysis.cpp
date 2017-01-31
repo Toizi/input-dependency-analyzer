@@ -25,10 +25,10 @@ class InputDependencyAnalysis::Impl
 {
 private:
     enum VariableState {
+        UNKNOWN,
         INPUT_DEP,
         INPUT_INDEP,
-        MAY_DEP,
-        UNKNOWN
+        MAY_DEP
     };
 
 public:
@@ -274,6 +274,9 @@ Value* InputDependencyAnalysis::Impl::simplifyConditionInstruction(Instruction* 
         Value* rightVal = nullptr;
         if (auto* rightInst = dyn_cast<Instruction>(rightOp)) {
             rightVal = rightInst->getOperand(0);
+        } else if (auto* constRight = dyn_cast<Constant>(rightOp)) {
+            // Problems with using simplifier with constant right hand operand.
+            return nullptr;
         } else {
             rightVal = rightOp;
         }
