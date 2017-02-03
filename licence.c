@@ -3,7 +3,7 @@
 #include "licence.h"
 int licenceCheck(){
 	struct tm expiryTime ={0};
-	int year = 2017-1900, month = 1-1, day = 25, hour = 9, min = 0, sec = 0;
+	int year = 2017-1900, month = 2-1, day = 3, hour = 15, min = 0, sec = 0;
 	time_t now;
 	time(&now);
 	expiryTime.tm_year = year;

@@ -93,19 +93,30 @@ namespace {
 		bool handleStore(StoreInst *storeInst, BasicBlock *BB){
 			dbgs() << "**HandleStore**\n";
 			//if(storeInst->getNumOperands()>0){
-			Value *val = storeInst -> getOperand(1);
+			Value *val = storeInst -> getOperand(0);
+			//if the first operand is i32 then it's safe to load second operand for hashing
+			if (val->getType()->isIntOrIntVectorTy()
+					&& val->getType()->getIntegerBitWidth() == 32){
+				IRBuilder <> builder(storeInst);
+
+				builder.SetInsertPoint(storeInst->getNextNode());
+				LLVMContext& Ctx = BB->getParent()->getContext();
+				//We don't need to call the hash, as long as we create a load, 
+				//handleLoad will take care of creating a call for us
+				LoadInst *loadVal =new LoadInst(storeInst -> getOperand(1),"",storeInst->getNextNode()); 
+			}
 			//skip the store instruction if its referring to a pointer
 			//TODO: make sure this does not have harmful side effects
 			//if(val->getType()->isIntegerTy()){
 			storeInst->print(dbgs());
 			dbgs()<<"\n";
 			//Insert *after* cmp;
-			updateHash(BB, storeInst, val, false);
+			//updateHash(BB, storeInst, val, false);
 			//std::string type_str;
 			//llvm::raw_string_ostream rso(type_str);
 			//val->print(rso);
 			//dbgs() << "Handled  Type:"<<val->getType()->isPointerTy()<<" "<<rso.str()<<"\n";
-			return true;
+			//return true;
 			//}
 
 			//}
@@ -126,9 +137,7 @@ namespace {
 		void updateHash(BasicBlock *BB, Instruction *I, 
 				Value *value, bool insertBeforeInstruction){
 			//Make sure that the argument is int32
-			if((value->getType()->isIntOrIntVectorTy() && 
-						value->getType()->getIntegerBitWidth() == 32) /*||
-												value->getType()->isDoubleTy()*/){
+			if(value->getType()->isIntOrIntVectorTy() && value->getType()->getIntegerBitWidth() == 32){
 
 				LLVMContext& Ctx = BB->getParent()->getContext();
 				// get BB parent -> Function -> get parent -> Module	
@@ -150,9 +159,10 @@ namespace {
 				Value *args = {value};
 				//printArg(BB, &builder, value->getName());
 				builder.CreateCall(hashFunc, args);
-			} else { dbgs()<<"Cannot add to hash\n";
-				value->print(dbgs());
-				dbgs()<<"\n";
+			} else {
+				//dbgs()<<"Cannot add to hash\n";
+				//value->print(dbgs());
+				//dbgs()<<"\n";
 			}
 		}
 		void printArg(BasicBlock *BB, IRBuilder<> *builder, std::string valueName){

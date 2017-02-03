@@ -8,3 +8,8 @@ build/*
 *.dh
 *.cfg
 *.verifier
+*.o
+*.swp
+*.swo
+*.out
+*.re
