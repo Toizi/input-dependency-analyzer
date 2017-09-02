@@ -141,6 +141,7 @@ void resolveCompundNodeDeps(value_dependence_graph::nodeT& node,
                 remove_values.push_back(dep_val);
                 resolve_value(dep_val_pos->second, remove_values, dep_info);
             }
+            dep_node->remove_depends_on(node);
             if (dep_node->is_leaf()) {
                 leaves.push_front(dep_node);
             }
