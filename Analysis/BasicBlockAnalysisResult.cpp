@@ -61,7 +61,7 @@ void BasicBlockAnalysisResult::analyze()
 {
     //llvm::dbgs() << "Analise block " << m_BB->getName() << "\n";
     for (auto& I : *m_BB) {
-        //llvm::dbgs() << "Instruction " << I << "\n";
+        llvm::dbgs() << "Instruction " << I << "\n";
         if (auto* allocInst = llvm::dyn_cast<llvm::AllocaInst>(&I)) {
             // collect alloca value with input dependency state INPUT_DEP
             m_valueDependencies.insert(std::make_pair(allocInst,
@@ -80,12 +80,14 @@ void BasicBlockAnalysisResult::analyze()
             processInvokeInst(invokeInst);
         } else if (auto* phi = llvm::dyn_cast<llvm::PHINode>(&I)) {
             processPhiNode(phi);
+            m_valueDependencies.insert(std::make_pair(phi, ValueDepInfo(getInstructionDependencies(phi))));
         } else if (auto* bitcast = llvm::dyn_cast<llvm::BitCastInst>(&I)) {
             processBitCast(bitcast);
         } else if (auto* getElPtr = llvm::dyn_cast<llvm::GetElementPtrInst>(&I)) {
             processGetElementPtrInst(getElPtr);
         } else {
             processInstruction(&I);
+            m_valueDependencies.insert(std::make_pair(&I, ValueDepInfo(getInstructionDependencies(&I))));
         }
     }
 }
@@ -794,6 +796,7 @@ DepInfo BasicBlockAnalysisResult::getLoadInstrDependencies(llvm::LoadInst* instr
 
 DepInfo BasicBlockAnalysisResult::determineInstructionDependenciesFromOperands(llvm::Instruction* instr)
 {
+    llvm::dbgs() << *instr << "\n";
     DepInfo deps(DepInfo::INPUT_INDEP);
     for (auto op = instr->op_begin(); op != instr->op_end(); ++op) {
         if (auto* opInst = llvm::dyn_cast<llvm::Instruction>(op)) {
@@ -801,9 +804,13 @@ DepInfo BasicBlockAnalysisResult::determineInstructionDependenciesFromOperands(l
             if (value_dep.isDefined()) {
                 deps.mergeDependencies(value_dep.getValueDep());
             }
-            const auto& c_deps = getInstructionDependencies(opInst);
-            if (c_deps.isDefined()) {
-                deps.mergeDependencies(c_deps);
+            if (opInst->getParent() != m_BB) {
+                deps.mergeDependencies(DepInfo(DepInfo::VALUE_DEP, ValueSet{opInst}));
+            } else {
+                const auto& c_deps = getInstructionDependencies(opInst);
+                if (c_deps.isDefined()) {
+                    deps.mergeDependencies(c_deps);
+                }
             }
         } else if (auto* opVal = llvm::dyn_cast<llvm::Value>(op)) {
             if (auto* global = llvm::dyn_cast<llvm::GlobalVariable>(opVal)) {

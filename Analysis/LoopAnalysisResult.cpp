@@ -269,8 +269,13 @@ DepInfo LoopAnalysisResult::getInstructionDependencies(llvm::Instruction* instr)
         return pos->second->getInstructionDependencies(instr);
     }
     if (auto loop = m_LI.getLoopFor(parentBB)) {
-        auto parentLoop = Utils::getTopLevelLoop(loop, &m_L);
-        parentBB = parentLoop->getHeader();
+        if (loop == &m_L) {
+            // TODO: or dissolve to values?
+            return DepInfo(DepInfo::VALUE_DEP, ValueSet{instr});
+        } else {
+            auto parentLoop = Utils::getTopLevelLoop(loop, &m_L);
+            parentBB = parentLoop->getHeader();
+        }
     } else {
         auto looppos = m_loopBlocks.find(parentBB);
         if (looppos != m_loopBlocks.end()) {

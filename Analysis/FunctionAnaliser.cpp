@@ -418,6 +418,9 @@ ValueDepInfo FunctionAnaliser::Impl::getDependencyInfoFromBlock(llvm::Value* val
     if (val == nullptr || block == nullptr) {
         return ValueDepInfo();
     }
+    if (auto* arg = llvm::dyn_cast<llvm::Argument>(val)) {
+        return ValueDepInfo(val->getType(), DepInfo(DepInfo::INPUT_ARGDEP, ArgumentSet{arg}));
+    }
     if (auto global = llvm::dyn_cast<llvm::GlobalVariable>(val)) {
         return getGlobalVariableDependencies(global);
     }
@@ -430,10 +433,10 @@ ValueDepInfo FunctionAnaliser::Impl::getDependencyInfoFromBlock(llvm::Value* val
     }
     auto instr = llvm::dyn_cast<llvm::Instruction>(val);
     assert(instr != nullptr);
-    if (instr->getParent() == block) {
+    //if (instr->getParent() == block) {
         return ValueDepInfo(val->getType(), analysisRes->getInstructionDependencies(instr));
-    }
-    return ValueDepInfo();
+    //}
+    //return ValueDepInfo();
 }
 
 DepInfo FunctionAnaliser::Impl::getBlockDependencyInfo(llvm::BasicBlock* block) const

@@ -46,6 +46,16 @@ bool Utils::haveIntersection(const DependencyAnaliser::ArgumentDependenciesMap& 
 ValueSet Utils::dissolveInstruction(llvm::Instruction* instr)
 {
     ValueSet values;
+    if (auto phi = llvm::dyn_cast<llvm::PHINode>(instr)) {
+        for (unsigned i = 0; i < phi->getNumIncomingValues(); ++i) {
+            llvm::Value* val = phi->getIncomingValue(i);
+            if (!val) {
+                continue;
+            }
+            values.insert(val);
+        }
+        return values;
+    }
     for (auto op = instr->op_begin(); op != instr->op_end(); ++op) {
         // make sure this comes before constant check, as global variable inherits from constant
         if (auto global = llvm::dyn_cast<llvm::GlobalVariable>(op)) {

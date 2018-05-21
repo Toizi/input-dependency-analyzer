@@ -173,6 +173,7 @@ void DependencyAnaliser::dump() const
 void DependencyAnaliser::processInstruction(llvm::Instruction* inst)
 {
     updateInstructionDependencies(inst, getInstructionDependencies(inst));
+    m_valueDependencies.insert(std::make_pair(inst, ValueDepInfo(getInstructionDependencies(inst))));
 }
 
 void DependencyAnaliser::processPhiNode(llvm::PHINode* phi)
@@ -217,6 +218,7 @@ void DependencyAnaliser::processPhiNode(llvm::PHINode* phi)
         info.mergeDependencies(DepInfo(DepInfo::INPUT_DEP));
     }
     updateInstructionDependencies(phi, info);
+    m_valueDependencies.insert(std::make_pair(phi, ValueDepInfo(getInstructionDependencies(phi))));
 }
 
 void DependencyAnaliser::processBitCast(llvm::BitCastInst* bitcast)
@@ -407,6 +409,7 @@ void DependencyAnaliser::processCallInst(llvm::CallInst* callInst)
                 // make all globals input dependent?
             }
         }
+        m_valueDependencies.insert(std::make_pair(callInst, ValueDepInfo(getInstructionDependencies(callInst))));
         return;
     }
     if (Utils::isLibraryFunction(F, m_F->getParent())) {
@@ -427,6 +430,7 @@ void DependencyAnaliser::processCallInst(llvm::CallInst* callInst)
             updateGlobalsAfterFunctionCall(callInst, F);
         }
     }
+    m_valueDependencies.insert(std::make_pair(callInst, ValueDepInfo(getInstructionDependencies(callInst))));
 }
 
 void DependencyAnaliser::processInvokeInst(llvm::InvokeInst* invokeInst)
@@ -456,6 +460,7 @@ void DependencyAnaliser::processInvokeInst(llvm::InvokeInst* invokeInst)
         if (throws) {
             updateInstructionDependencies(invokeInst, DepInfo(DepInfo::INPUT_DEP));
         }
+        m_valueDependencies.insert(std::make_pair(invokeInst, ValueDepInfo(getInstructionDependencies(invokeInst))));
         return;
     }
     if (Utils::isLibraryFunction(F, m_F->getParent())) {
@@ -478,6 +483,7 @@ void DependencyAnaliser::processInvokeInst(llvm::InvokeInst* invokeInst)
     if (throws) {
         updateInstructionDependencies(invokeInst, DepInfo(DepInfo::INPUT_DEP));
     }
+    m_valueDependencies.insert(std::make_pair(invokeInst, ValueDepInfo(getInstructionDependencies(invokeInst))));
 }
 
 void DependencyAnaliser::processCallSiteWithMultipleTargets(llvm::CallInst* callInst, const FunctionSet& targets)

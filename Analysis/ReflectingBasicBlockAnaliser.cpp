@@ -257,8 +257,8 @@ DepInfo ReflectingBasicBlockAnaliser::getInstructionDependencies(llvm::Instructi
     }
     auto deppos = m_inputDependentInstrs.find(instr);
     assert(deppos != m_inputDependentInstrs.end());
-    assert(deppos->second.isInputDep() || deppos->second.isInputArgumentDep()
-    || deppos->second.isOnlyGlobalValueDependent());
+    //assert(deppos->second.isInputDep() || deppos->second.isInputArgumentDep()
+    //|| deppos->second.isOnlyGlobalValueDependent());
     return deppos->second;
 }
 
@@ -741,7 +741,7 @@ void ReflectingBasicBlockAnaliser::resolveValueDependencies(const DependencyAnal
     graph.build(m_valueDependencies, m_initialDependencies);
 
     // write dot for value dependency graph
-    //if (m_BB->getParent()->getName() == "snake_game_over") {
+    //if (m_BB->getParent()->getName() == "loop_test1") {
     //    std::string name = m_BB->getParent()->getName();
     //    name += "_";
     //    name += m_BB->getName();
